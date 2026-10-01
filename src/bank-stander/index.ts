@@ -35,7 +35,9 @@ export function onGameTick(): void {
 						? ['cut', 'string', 'darts', 'bolts', 'arrows']
 						: skill === 'Crafting'
 							? ['gems']
-							: ['clean', 'unfinished', 'finished'];
+							: skill === 'Farming'
+								? ['plant', 'water']
+								: ['clean', 'unfinished', 'finished'];
 				for (const name of counters) {
 					game.counter(skill + ' ' + name, 0);
 				}

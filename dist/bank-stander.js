@@ -140,6 +140,8 @@ var skillToApi = skill => {
       return net.runelite.api.Skill.FLETCHING;
     case 'Crafting':
       return net.runelite.api.Skill.CRAFTING;
+    case 'Farming':
+      return net.runelite.api.Skill.FARMING;
     case 'Herblore':
     default:
       return net.runelite.api.Skill.HERBLORE;
@@ -399,6 +401,234 @@ var fletchingJobs = settings => FLETCHING.filter(job => {
   var _settings$fletching;
   return ((_settings$fletching = settings.fletching) !== null && _settings$fletching !== void 0 ? _settings$fletching : []).includes(job.key);
 });
+
+var GARDENING_TROWEL = 5325;
+var FILLED_PLANT_POT = 5354;
+var WATERING_CANS = [5340, 5339, 5338, 5337, 5336, 5335, 5334, 5333];
+var SEEDLINGS = [{
+  key: 'oak',
+  label: 'Oak',
+  level: 15,
+  seed: 5312,
+  seedling: 5358,
+  watered: 5364,
+  sapling: 5370
+}, {
+  key: 'white-tree',
+  label: 'White tree shoot',
+  level: 25,
+  seed: 6461,
+  seedling: 6462,
+  watered: 6463,
+  sapling: 6464
+}, {
+  key: 'apple',
+  label: 'Apple',
+  level: 27,
+  seed: 5283,
+  seedling: 5480,
+  watered: 5488,
+  sapling: 5496
+}, {
+  key: 'willow',
+  label: 'Willow',
+  level: 30,
+  seed: 5313,
+  seedling: 5359,
+  watered: 5365,
+  sapling: 5371
+}, {
+  key: 'banana',
+  label: 'Banana',
+  level: 33,
+  seed: 5284,
+  seedling: 5481,
+  watered: 5489,
+  sapling: 5497
+}, {
+  key: 'teak',
+  label: 'Teak',
+  level: 35,
+  seed: 21486,
+  seedling: 21469,
+  watered: 21473,
+  sapling: 21477
+}, {
+  key: 'orange',
+  label: 'Orange',
+  level: 39,
+  seed: 5285,
+  seedling: 5482,
+  watered: 5490,
+  sapling: 5498
+}, {
+  key: 'curry',
+  label: 'Curry',
+  level: 42,
+  seed: 5286,
+  seedling: 5483,
+  watered: 5491,
+  sapling: 5499
+}, {
+  key: 'maple',
+  label: 'Maple',
+  level: 45,
+  seed: 5314,
+  seedling: 5360,
+  watered: 5366,
+  sapling: 5372
+}, {
+  key: 'pineapple',
+  label: 'Pineapple',
+  level: 51,
+  seed: 5287,
+  seedling: 5484,
+  watered: 5492,
+  sapling: 5500
+}, {
+  key: 'mahogany',
+  label: 'Mahogany',
+  level: 55,
+  seed: 21488,
+  seedling: 21471,
+  watered: 21475,
+  sapling: 21480
+}, {
+  key: 'papaya',
+  label: 'Papaya',
+  level: 57,
+  seed: 5288,
+  seedling: 5485,
+  watered: 5493,
+  sapling: 5501
+}, {
+  key: 'yew',
+  label: 'Yew',
+  level: 60,
+  seed: 5315,
+  seedling: 5361,
+  watered: 5367,
+  sapling: 5373
+}, {
+  key: 'camphor',
+  label: 'Camphor',
+  level: 66,
+  seed: 31547,
+  seedling: 31490,
+  watered: 31496,
+  sapling: 31502
+}, {
+  key: 'palm',
+  label: 'Palm',
+  level: 68,
+  seed: 5289,
+  seedling: 5486,
+  watered: 5494,
+  sapling: 5502
+}, {
+  key: 'calquat',
+  label: 'Calquat',
+  level: 72,
+  seed: 5290,
+  seedling: 5487,
+  watered: 5495,
+  sapling: 5503
+}, {
+  key: 'crystal',
+  label: 'Crystal',
+  level: 74,
+  seed: 23661,
+  seedling: 23655,
+  watered: 23657,
+  sapling: 23659
+}, {
+  key: 'magic',
+  label: 'Magic',
+  level: 75,
+  seed: 5316,
+  seedling: 5362,
+  watered: 5368,
+  sapling: 5374
+}, {
+  key: 'ironwood',
+  label: 'Ironwood',
+  level: 80,
+  seed: 31549,
+  seedling: 31492,
+  watered: 31498,
+  sapling: 31505
+}, {
+  key: 'dragonfruit',
+  label: 'Dragonfruit',
+  level: 81,
+  seed: 22877,
+  seedling: 22862,
+  watered: 22864,
+  sapling: 22866
+}, {
+  key: 'spirit',
+  label: 'Spirit',
+  level: 83,
+  seed: 5317,
+  seedling: 5363,
+  watered: 5369,
+  sapling: 5375
+}, {
+  key: 'celastrus',
+  label: 'Celastrus',
+  level: 85,
+  seed: 22869,
+  seedling: 22848,
+  watered: 22852,
+  sapling: 22856
+}, {
+  key: 'redwood',
+  label: 'Redwood',
+  level: 90,
+  seed: 22871,
+  seedling: 22850,
+  watered: 22854,
+  sapling: 22859
+}, {
+  key: 'rosewood',
+  label: 'Rosewood',
+  level: 92,
+  seed: 31551,
+  seedling: 31494,
+  watered: 31500,
+  sapling: 31508
+}];
+var FARMING = [].concat(_toConsumableArray(SEEDLINGS.map(recipe => ({
+  key: recipe.key,
+  label: recipe.label + ' seedling',
+  level: recipe.level,
+  kind: 'plant',
+  inputs: [FILLED_PLANT_POT, recipe.seed],
+  outputs: [recipe.seedling],
+  chemistry: false,
+  tool: GARDENING_TROWEL,
+  passiveTool: true,
+  limit: 13,
+  direct: true,
+  stage: 0
+}))), _toConsumableArray(SEEDLINGS.map(recipe => ({
+  key: recipe.key + '.water',
+  label: 'Water ' + recipe.label + ' seedling',
+  level: recipe.level,
+  kind: 'water',
+  inputs: [recipe.seedling],
+  outputs: [recipe.watered, recipe.sapling],
+  chemistry: false,
+  tools: WATERING_CANS,
+  limit: 1,
+  direct: true,
+  stage: 1
+}))));
+var farmingJobs = settings => {
+  var _settings$farming;
+  var selected = new Set((_settings$farming = settings.farming) !== null && _settings$farming !== void 0 ? _settings$farming : []);
+  return FARMING.filter(job => selected.has(job.key.replace(/\.water$/, '')));
+};
 
 var HERBS = [{
   key: 'guam',
@@ -789,10 +1019,11 @@ var selectBatch = (jobs, level, count, progressive) => {
     _step2;
   try {
     for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-      var _job$limit;
+      var _job$tools, _job$limit, _job$stage, _chosen$job$stage, _chosen;
       var job = _step2.value;
       if (job.level > level) continue;
-      if (job.tool && count(job.tool) < 1) continue;
+      var tool = job.tool === undefined ? (_job$tools = job.tools) === null || _job$tools === void 0 ? void 0 : _job$tools.find(id => count(id) > 0) : count(job.tool) > 0 ? job.tool : undefined;
+      if ((job.tool !== undefined || job.tools !== undefined) && tool === undefined) continue;
       var quantity = (_job$limit = job.limit) !== null && _job$limit !== void 0 ? _job$limit : job.kind === 'clean' ? 28 : 14;
       var _iterator3 = _createForOfIteratorHelper(job.inputs),
         _step3;
@@ -807,9 +1038,12 @@ var selectBatch = (jobs, level, count, progressive) => {
         _iterator3.f();
       }
       if (quantity < 1) continue;
-      if (!chosen || progressive && job.level > chosen.job.level) chosen = {
+      var stage = (_job$stage = job.stage) !== null && _job$stage !== void 0 ? _job$stage : 0;
+      var chosenStage = (_chosen$job$stage = (_chosen = chosen) === null || _chosen === void 0 ? void 0 : _chosen.job.stage) !== null && _chosen$job$stage !== void 0 ? _chosen$job$stage : 0;
+      if (!chosen || stage < chosenStage || stage === chosenStage && progressive && job.level > chosen.job.level) chosen = {
         job,
-        quantity
+        quantity,
+        tool
       };
       if (!progressive && chosen) break;
     }
@@ -861,7 +1095,9 @@ var HerbloreRunner = /*#__PURE__*/function () {
       darts: 0,
       bolts: 0,
       arrows: 0,
-      gems: 0
+      gems: 0,
+      plant: 0,
+      water: 0
     });
     this.game = game;
     this.settings = settings;
@@ -874,7 +1110,7 @@ var HerbloreRunner = /*#__PURE__*/function () {
     try {
       for (_iterator.s(); !(_step = _iterator.n()).done;) {
         var skill = _step.value;
-        var jobs = skill === 'Herblore' ? jobsFor(settings) : skill === 'Crafting' ? craftingJobs(settings) : fletchingJobs(settings);
+        var jobs = skill === 'Herblore' ? jobsFor(settings) : skill === 'Crafting' ? craftingJobs(settings) : skill === 'Fletching' ? fletchingJobs(settings) : farmingJobs(settings);
         if (jobs.length > 0) {
           this.phases.push({
             skill,
@@ -1103,7 +1339,10 @@ var HerbloreRunner = /*#__PURE__*/function () {
               this.wait('switch bank to Item mode', () => game.unnoted(), () => !game.noted(), () => {});
               break;
             }
-            this.batch = selectBatch(current.jobs, game.level(current.skill), id => game.bank(id) + (current.jobs.some(j => j.tool === id) ? game.inventory(id) : 0), this.settings.progressive);
+            this.batch = selectBatch(current.jobs, game.level(current.skill), id => game.bank(id) + (current.jobs.some(j => {
+              var _j$tools;
+              return j.tool === id || ((_j$tools = j.tools) === null || _j$tools === void 0 ? void 0 : _j$tools.includes(id));
+            }) ? game.inventory(id) : 0), this.settings.progressive);
             if (!this.batch) {
               var _iterator3 = _createForOfIteratorHelper(current.jobs),
                 _step3;
@@ -1155,7 +1394,7 @@ var HerbloreRunner = /*#__PURE__*/function () {
             this.withdrawalIndex = 0;
             this.withdrawalTicks = 0;
             this.withdrawalAttempts = 0;
-            var tool = this.batch.job.tool;
+            var tool = this.batch.tool;
             var needsDeposit = tool !== undefined && game.inventory(tool) > 0 ? game.heldItemIds().some(id => id !== tool) : game.emptySlots() < 28;
             if (needsDeposit) {
               this.state = 'deposit';
@@ -1166,10 +1405,13 @@ var HerbloreRunner = /*#__PURE__*/function () {
           }
         case 'deposit':
           {
-            var _this$batch$job$tool, _this$batch2, _this$currentPhase2;
-            var _tool = (_this$batch$job$tool = (_this$batch2 = this.batch) === null || _this$batch2 === void 0 ? void 0 : _this$batch2.job.tool) !== null && _this$batch$job$tool !== void 0 ? _this$batch$job$tool : (_this$currentPhase2 = this.currentPhase) === null || _this$currentPhase2 === void 0 || (_this$currentPhase2 = _this$currentPhase2.jobs.find(j => j.tool !== undefined && game.inventory(j.tool) > 0)) === null || _this$currentPhase2 === void 0 ? void 0 : _this$currentPhase2.tool;
-            if (_tool !== undefined && game.inventory(_tool) > 0) {
-              var toDeposit = game.heldItemIds().filter(id => id !== _tool);
+            var _this$batch$tool, _this$batch2, _this$currentPhase2;
+            var heldTool = (_this$batch$tool = (_this$batch2 = this.batch) === null || _this$batch2 === void 0 ? void 0 : _this$batch2.tool) !== null && _this$batch$tool !== void 0 ? _this$batch$tool : (_this$currentPhase2 = this.currentPhase) === null || _this$currentPhase2 === void 0 ? void 0 : _this$currentPhase2.jobs.flatMap(job => {
+              var _job$tools, _job$tools2;
+              return job.tool === undefined ? (_job$tools = job.tools) !== null && _job$tools !== void 0 ? _job$tools : [] : [job.tool].concat(_toConsumableArray((_job$tools2 = job.tools) !== null && _job$tools2 !== void 0 ? _job$tools2 : []));
+            }).find(id => game.inventory(id) > 0);
+            if (heldTool !== undefined && game.inventory(heldTool) > 0) {
+              var toDeposit = game.heldItemIds().filter(id => id !== heldTool);
               if (toDeposit.length === 0) {
                 this.state = 'plan';
                 break;
@@ -1209,9 +1451,9 @@ var HerbloreRunner = /*#__PURE__*/function () {
               this.stop('Missing batch.');
               break;
             }
-            var items = batch.job.tool ? [batch.job.tool].concat(_toConsumableArray(batch.job.inputs)) : batch.job.inputs;
+            var items = batch.tool ? [batch.tool].concat(_toConsumableArray(batch.job.inputs)) : batch.job.inputs;
             var id = items[this.withdrawalIndex];
-            var requested = id === batch.job.tool ? 1 : batch.quantity;
+            var requested = id === batch.tool ? 1 : batch.quantity;
             if (id === undefined) {
               this.state = 'close';
               break;
@@ -1226,7 +1468,7 @@ var HerbloreRunner = /*#__PURE__*/function () {
             if (this.withdrawalAttempts > 0) this.withdrawalTicks++;
             if (held >= requested || held > 0 && this.withdrawalTicks >= 15) {
               game.log('Withdraw confirmed: item ' + id + ', inventory ' + held + ', requested ' + batch.quantity + '.');
-              if (id !== batch.job.tool) batch.quantity = Math.min(batch.quantity, held);
+              if (id !== batch.tool) batch.quantity = Math.min(batch.quantity, held);
               this.withdrawalIndex++;
               this.withdrawalAttempts = 0;
               this.withdrawalTicks = 0;
@@ -1286,10 +1528,10 @@ var HerbloreRunner = /*#__PURE__*/function () {
               var outputBefore = this.outputCount();
               this.wait('clean herb ' + first, () => game.clean(first), () => game.inventory(first) < before && this.outputCount() > outputBefore, () => {});
             } else {
-              var _job$tool;
+              var _this$batch4, _this$batch5;
               this.directActive = false;
               this.menuOutput = this.outputCount();
-              game.combine((_job$tool = _job.tool) !== null && _job$tool !== void 0 ? _job$tool : first, _job.tool ? first : _job.inputs[1]);
+              game.combine((_this$batch4 = this.batch) !== null && _this$batch4 !== void 0 && _this$batch4.tool && !_job.passiveTool ? this.batch.tool : first, (_this$batch5 = this.batch) !== null && _this$batch5 !== void 0 && _this$batch5.tool && !_job.passiveTool ? first : _job.inputs[1]);
               this.idleTicks = 0;
               this.state = 'menu';
             }
@@ -1297,13 +1539,13 @@ var HerbloreRunner = /*#__PURE__*/function () {
           }
         case 'menu':
           {
-            var _this$batch4;
-            if (game.makeVisible((_this$batch4 = this.batch) === null || _this$batch4 === void 0 ? void 0 : _this$batch4.job)) {
+            var _this$batch6;
+            if (game.makeVisible((_this$batch6 = this.batch) === null || _this$batch6 === void 0 ? void 0 : _this$batch6.job)) {
               game.makeAll();
               this.state = 'make';
             } else if (this.outputCount() > this.menuOutput) {
-              var _this$batch5;
-              this.directActive = !!((_this$batch5 = this.batch) !== null && _this$batch5 !== void 0 && _this$batch5.job.direct);
+              var _this$batch7;
+              this.directActive = !!((_this$batch7 = this.batch) !== null && _this$batch7 !== void 0 && _this$batch7.job.direct);
               this.state = 'mix';
               this.idleTicks = 0;
             } else if (++this.idleTicks > 12) this.retryMix();
@@ -1311,11 +1553,11 @@ var HerbloreRunner = /*#__PURE__*/function () {
           }
         case 'make':
           {
-            var _this$batch6;
-            if (game.makeVisible((_this$batch6 = this.batch) === null || _this$batch6 === void 0 ? void 0 : _this$batch6.job)) {
-              var _this$batch7, _this$batch8;
-              game.log('Clicking Make for ' + ((_this$batch7 = this.batch) === null || _this$batch7 === void 0 ? void 0 : _this$batch7.job.label) + '.');
-              game.make((_this$batch8 = this.batch) === null || _this$batch8 === void 0 ? void 0 : _this$batch8.job);
+            var _this$batch8;
+            if (game.makeVisible((_this$batch8 = this.batch) === null || _this$batch8 === void 0 ? void 0 : _this$batch8.job)) {
+              var _this$batch9, _this$batch0;
+              game.log('Clicking Make for ' + ((_this$batch9 = this.batch) === null || _this$batch9 === void 0 ? void 0 : _this$batch9.job.label) + '.');
+              game.make((_this$batch0 = this.batch) === null || _this$batch0 === void 0 ? void 0 : _this$batch0.job);
             }
             this.state = 'mix';
             this.idleTicks = 0;
@@ -1323,8 +1565,8 @@ var HerbloreRunner = /*#__PURE__*/function () {
           }
         case 'mix':
           {
-            var _this$batch9;
-            var _job2 = (_this$batch9 = this.batch) === null || _this$batch9 === void 0 ? void 0 : _this$batch9.job;
+            var _this$batch1;
+            var _job2 = (_this$batch1 = this.batch) === null || _this$batch1 === void 0 ? void 0 : _this$batch1.job;
             if (!_job2) {
               this.stop('Missing recipe.');
               break;
@@ -1349,8 +1591,8 @@ var HerbloreRunner = /*#__PURE__*/function () {
     key: "retryMix",
     value: function retryMix() {
       if (++this.retries > 3) {
-        var _this$batch0;
-        this.stop('No production confirmed for ' + ((_this$batch0 = this.batch) === null || _this$batch0 === void 0 ? void 0 : _this$batch0.job.label) + '. Check requirements and the Make menu.');
+        var _this$batch10;
+        this.stop('No production confirmed for ' + ((_this$batch10 = this.batch) === null || _this$batch10 === void 0 ? void 0 : _this$batch10.job.label) + '. Check requirements and the Make menu.');
         return;
       }
       this.game.log('Production interrupted; retry ' + this.retries + '/3.');
@@ -1359,16 +1601,18 @@ var HerbloreRunner = /*#__PURE__*/function () {
   }]);
 }();
 
-var SKILL_ORDER = ['Herblore', 'Crafting', 'Fletching'];
+var SKILL_ORDER = ['Herblore', 'Crafting', 'Fletching', 'Farming'];
 var CACHE_PREFIX = 'bankStander.';
 var HERB_PREFIX = 'bankStander.herblore.';
 var FLETCH_PREFIX = 'bankStander.fletching.';
 var CRAFT_PREFIX = 'bankStander.crafting.';
+var FARM_PREFIX = 'bankStander.farming.';
 var defaultSettings = {
   skill: 'Herblore',
   skills: ['Herblore', 'Crafting', 'Fletching'],
   fletching: [],
   crafting: [],
+  farming: [],
   progressive: true,
   chemistry: false,
   targetLevel: 0,
@@ -1382,13 +1626,14 @@ var loadSettings = () => {
     return _objectSpread2(_objectSpread2({}, defaultSettings), {}, {
       herbs: {},
       fletching: [],
-      crafting: []
+      crafting: [],
+      farming: []
     });
   }
   var playStyle = bot.bmCache.getString(CACHE_PREFIX + 'playStyle', 'normal') === 'lazy' ? 'lazy' : 'normal';
   var randomAfk = bot.bmCache.getBoolean(CACHE_PREFIX + 'randomAfk', true);
   var skillStr = bot.bmCache.getString(CACHE_PREFIX + 'skill', 'Herblore');
-  var skill = skillStr === 'Fletching' ? 'Fletching' : skillStr === 'Crafting' ? 'Crafting' : 'Herblore';
+  var skill = skillStr === 'Farming' ? 'Farming' : skillStr === 'Fletching' ? 'Fletching' : skillStr === 'Crafting' ? 'Crafting' : 'Herblore';
   var hasMultiSkillCache = bot.bmCache.getBoolean(CACHE_PREFIX + 'skills.configured', false);
   var skills = [];
   if (hasMultiSkillCache) {
@@ -1455,11 +1700,27 @@ var loadSettings = () => {
   } finally {
     _iterator3.f();
   }
+  var farming = [];
+  var _iterator4 = _createForOfIteratorHelper(SEEDLINGS),
+    _step4;
+  try {
+    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+      var recipe = _step4.value;
+      if (bot.bmCache.getBoolean(FARM_PREFIX + recipe.key, false)) {
+        farming.push(recipe.key);
+      }
+    }
+  } catch (err) {
+    _iterator4.e(err);
+  } finally {
+    _iterator4.f();
+  }
   return {
     skill,
     skills,
     fletching,
     crafting,
+    farming,
     progressive,
     chemistry,
     targetLevel,
@@ -1469,7 +1730,7 @@ var loadSettings = () => {
   };
 };
 var saveSettings = settings => {
-  var _settings$skill, _settings$skills, _settings$skill2, _settings$playStyle, _settings$randomAfk, _settings$fletching, _settings$crafting;
+  var _settings$skill, _settings$skills, _settings$skill2, _settings$playStyle, _settings$randomAfk, _settings$fletching, _settings$crafting, _settings$farming;
   bot.bmCache.saveBoolean(CACHE_PREFIX + 'configured', true);
   bot.bmCache.saveBoolean(HERB_PREFIX + 'configured', true);
   bot.bmCache.saveBoolean(CACHE_PREFIX + 'skills.configured', true);
@@ -1484,12 +1745,12 @@ var saveSettings = settings => {
   bot.bmCache.saveInt(HERB_PREFIX + 'target', settings.targetLevel);
   bot.bmCache.saveString(CACHE_PREFIX + 'playStyle', (_settings$playStyle = settings.playStyle) !== null && _settings$playStyle !== void 0 ? _settings$playStyle : 'normal');
   bot.bmCache.saveBoolean(CACHE_PREFIX + 'randomAfk', (_settings$randomAfk = settings.randomAfk) !== null && _settings$randomAfk !== void 0 ? _settings$randomAfk : true);
-  var _iterator4 = _createForOfIteratorHelper(HERBS),
-    _step4;
+  var _iterator5 = _createForOfIteratorHelper(HERBS),
+    _step5;
   try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+    for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
       var _settings$herbs$herb$;
-      var herb = _step4.value;
+      var herb = _step5.value;
       var sel = (_settings$herbs$herb$ = settings.herbs[herb.key]) !== null && _settings$herbs$herb$ !== void 0 ? _settings$herbs$herb$ : {
         clean: false,
         unfinished: false,
@@ -1500,35 +1761,48 @@ var saveSettings = settings => {
       bot.bmCache.saveString(HERB_PREFIX + herb.key + '.potion', sel.potion);
     }
   } catch (err) {
-    _iterator4.e(err);
-  } finally {
-    _iterator4.f();
-  }
-  var selectedFletch = new Set((_settings$fletching = settings.fletching) !== null && _settings$fletching !== void 0 ? _settings$fletching : []);
-  var _iterator5 = _createForOfIteratorHelper(FLETCHING),
-    _step5;
-  try {
-    for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-      var job = _step5.value;
-      bot.bmCache.saveBoolean(FLETCH_PREFIX + job.key, selectedFletch.has(job.key));
-    }
-  } catch (err) {
     _iterator5.e(err);
   } finally {
     _iterator5.f();
   }
-  var selectedCraft = new Set((_settings$crafting = settings.crafting) !== null && _settings$crafting !== void 0 ? _settings$crafting : []);
-  var _iterator6 = _createForOfIteratorHelper(CRAFTING),
+  var selectedFletch = new Set((_settings$fletching = settings.fletching) !== null && _settings$fletching !== void 0 ? _settings$fletching : []);
+  var _iterator6 = _createForOfIteratorHelper(FLETCHING),
     _step6;
   try {
     for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-      var _job2 = _step6.value;
-      bot.bmCache.saveBoolean(CRAFT_PREFIX + _job2.key, selectedCraft.has(_job2.key));
+      var job = _step6.value;
+      bot.bmCache.saveBoolean(FLETCH_PREFIX + job.key, selectedFletch.has(job.key));
     }
   } catch (err) {
     _iterator6.e(err);
   } finally {
     _iterator6.f();
+  }
+  var selectedCraft = new Set((_settings$crafting = settings.crafting) !== null && _settings$crafting !== void 0 ? _settings$crafting : []);
+  var _iterator7 = _createForOfIteratorHelper(CRAFTING),
+    _step7;
+  try {
+    for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+      var _job2 = _step7.value;
+      bot.bmCache.saveBoolean(CRAFT_PREFIX + _job2.key, selectedCraft.has(_job2.key));
+    }
+  } catch (err) {
+    _iterator7.e(err);
+  } finally {
+    _iterator7.f();
+  }
+  var selectedFarm = new Set((_settings$farming = settings.farming) !== null && _settings$farming !== void 0 ? _settings$farming : []);
+  var _iterator8 = _createForOfIteratorHelper(SEEDLINGS),
+    _step8;
+  try {
+    for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+      var recipe = _step8.value;
+      bot.bmCache.saveBoolean(FARM_PREFIX + recipe.key, selectedFarm.has(recipe.key));
+    }
+  } catch (err) {
+    _iterator8.e(err);
+  } finally {
+    _iterator8.f();
   }
 };
 
@@ -1544,18 +1818,18 @@ var closeWindow = () => {
   }
 };
 var showWindow = () => {
-  var _initial$skill, _initial$skill2, _initial$randomAfk, _initial$fletching, _initial$crafting;
+  var _initial$skill, _initial$skill2, _initial$randomAfk, _initial$fletching, _initial$crafting, _initial$farming;
   submitted = null;
   cancelled = false;
   var initial = loadSettings();
-  var background = new java.awt.Color(0x130E20);
+  var background = new java.awt.Color(0x130e20);
   var surface = new java.awt.Color(0x211738);
-  var borderLine = new java.awt.Color(0x3E2D60);
-  var foreground = new java.awt.Color(0xF5EEFC);
-  var muted = new java.awt.Color(0xA594C6);
-  var accent = new java.awt.Color(0xC084FC);
-  var buttonBg = new java.awt.Color(0x8B5CF6);
-  var buttonFg = new java.awt.Color(0xFFFFFF);
+  var borderLine = new java.awt.Color(0x3e2d60);
+  var foreground = new java.awt.Color(0xf5eefc);
+  var muted = new java.awt.Color(0xa594c6);
+  var accent = new java.awt.Color(0xc084fc);
+  var buttonBg = new java.awt.Color(0x8b5cf6);
+  var buttonFg = new java.awt.Color(0xffffff);
   var panel = function panel(layout) {
     var bg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : background;
     var p = new javax.swing.JPanel(layout);
@@ -1602,7 +1876,7 @@ var showWindow = () => {
     result.add(body, java.awt.BorderLayout.CENTER);
     return result;
   };
-  frame = new javax.swing.JFrame('Bank Stander - Multi-Skill (Herblore, Crafting & Fletching) | by xulixna');
+  frame = new javax.swing.JFrame('Bank Stander - Multi-Skill (Herblore, Crafting, Fletching & Farming) | by xulixna');
   var mainPanel = panel(new java.awt.BorderLayout(12, 12));
   mainPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(14, 14, 14, 14));
   var headerPanel = panel(new java.awt.GridLayout(2, 1, 2, 2));
@@ -1610,7 +1884,7 @@ var showWindow = () => {
   titleLabel.setForeground(accent);
   titleLabel.setFont(new java.awt.Font('Dialog', java.awt.Font.BOLD, 22));
   titleLabel.setHorizontalAlignment(0);
-  var subtitleLabel = label('Multi-Skill Automation (Herblore • Crafting • Fletching) • by xulixna', false);
+  var subtitleLabel = label('Multi-Skill Automation (Herblore • Crafting • Fletching • Farming) • by xulixna', false);
   subtitleLabel.setForeground(muted);
   subtitleLabel.setFont(new java.awt.Font('Dialog', java.awt.Font.PLAIN, 12));
   subtitleLabel.setHorizontalAlignment(0);
@@ -1649,9 +1923,19 @@ var showWindow = () => {
   var fletchRow = panel(new java.awt.BorderLayout(4, 0), surface);
   fletchRow.add(fletchCb, java.awt.BorderLayout.WEST);
   fletchRow.add(fletchButton, java.awt.BorderLayout.CENTER);
+  var farmCb = checkbox('', initialEnabled.has('Farming'), surface);
+  farmCb.setToolTipText('Include Farming in the execution queue');
+  var farmButton = new javax.swing.JButton('4. Farming');
+  farmButton.setFont(new java.awt.Font('Dialog', java.awt.Font.BOLD, 12));
+  farmButton.setFocusPainted(false);
+  farmButton.setHorizontalAlignment(2);
+  var farmRow = panel(new java.awt.BorderLayout(4, 0), surface);
+  farmRow.add(farmCb, java.awt.BorderLayout.WEST);
+  farmRow.add(farmButton, java.awt.BorderLayout.CENTER);
   skillBox.add(herbRow);
   skillBox.add(craftRow);
   skillBox.add(fletchRow);
+  skillBox.add(farmRow);
   sidebarArea.add(skillBox, java.awt.BorderLayout.NORTH);
   var infoBox = panel(new java.awt.GridLayout(0, 1, 0, 4), surface);
   infoBox.setBorder(createSectionBorder('Execution Queue'));
@@ -1667,6 +1951,9 @@ var showWindow = () => {
   var info4 = label('3. Fletching (Bows & darts)', false);
   info4.setForeground(accent);
   info4.setFont(new java.awt.Font('Dialog', java.awt.Font.PLAIN, 11));
+  var infoFarm = label('4. Farming (Seedlings)', false);
+  infoFarm.setForeground(accent);
+  infoFarm.setFont(new java.awt.Font('Dialog', java.awt.Font.PLAIN, 11));
   var info5 = label('Auto-deposits & advances', false);
   info5.setForeground(muted);
   info5.setFont(new java.awt.Font('Dialog', java.awt.Font.ITALIC, 11));
@@ -1677,6 +1964,7 @@ var showWindow = () => {
   infoBox.add(info2);
   infoBox.add(info3);
   infoBox.add(info4);
+  infoBox.add(infoFarm);
   infoBox.add(info5);
   infoBox.add(info6);
   sidebarArea.add(infoBox, java.awt.BorderLayout.CENTER);
@@ -2020,6 +2308,51 @@ var showWindow = () => {
       _iterator10.f();
     }
   });
+  var initialFarm = new Set((_initial$farming = initial.farming) !== null && _initial$farming !== void 0 ? _initial$farming : []);
+  var farmRows = SEEDLINGS.map(recipe => ({
+    recipe,
+    checkbox: checkbox(recipe.label + ' seedling  -  Lv. ' + recipe.level, initialFarm.has(recipe.key))
+  }));
+  var farmGrid = panel(new java.awt.GridLayout(0, 2, 8, 8));
+  var _iterator11 = _createForOfIteratorHelper(farmRows),
+    _step11;
+  try {
+    for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+      var _row = _step11.value;
+      farmGrid.add(_row.checkbox);
+    }
+  } catch (err) {
+    _iterator11.e(err);
+  } finally {
+    _iterator11.f();
+  }
+  var farmPage = checklistPage('Seedlings (plant, then water)', 'Requires a Gardening trowel, filled plant pots and charged watering cans. Plants all selected seeds before watering.', farmGrid, () => {
+    var _iterator12 = _createForOfIteratorHelper(farmRows),
+      _step12;
+    try {
+      for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+        var row = _step12.value;
+        row.checkbox.setSelected(true);
+      }
+    } catch (err) {
+      _iterator12.e(err);
+    } finally {
+      _iterator12.f();
+    }
+  }, () => {
+    var _iterator13 = _createForOfIteratorHelper(farmRows),
+      _step13;
+    try {
+      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+        var row = _step13.value;
+        row.checkbox.setSelected(false);
+      }
+    } catch (err) {
+      _iterator13.e(err);
+    } finally {
+      _iterator13.f();
+    }
+  });
   var footer = panel(new java.awt.BorderLayout(0, 10));
   footer.add(optionsPanel, java.awt.BorderLayout.NORTH);
   var buttonPanel = panel(new java.awt.BorderLayout(4, 4));
@@ -2043,6 +2376,7 @@ var showWindow = () => {
     if (herbCb.isSelected()) result.push('Herblore');
     if (craftCb.isSelected()) result.push('Crafting');
     if (fletchCb.isSelected()) result.push('Fletching');
+    if (farmCb.isSelected()) result.push('Farming');
     return result;
   };
   var updateStartButtonText = () => {
@@ -2058,10 +2392,12 @@ var showWindow = () => {
   herbCb.addActionListener(() => updateStartButtonText());
   craftCb.addActionListener(() => updateStartButtonText());
   fletchCb.addActionListener(() => updateStartButtonText());
+  farmCb.addActionListener(() => updateStartButtonText());
   var updateSkillNavButtons = () => {
     var isHerb = activeViewSkill === 'Herblore';
     var isCraft = activeViewSkill === 'Crafting';
     var isFletch = activeViewSkill === 'Fletching';
+    var isFarm = activeViewSkill === 'Farming';
     var setStyle = (btn, active) => {
       btn.setBackground(active ? buttonBg : surface);
       btn.setForeground(active ? buttonFg : muted);
@@ -2070,11 +2406,12 @@ var showWindow = () => {
     setStyle(herbButton, isHerb);
     setStyle(craftButton, isCraft);
     setStyle(fletchButton, isFletch);
+    setStyle(farmButton, isFarm);
   };
   var selectSkill = skill => {
     activeViewSkill = skill;
     pages.removeAll();
-    pages.add(skill === 'Herblore' ? herbPage : skill === 'Crafting' ? craftPage : fletchPage, java.awt.BorderLayout.CENTER);
+    pages.add(skill === 'Herblore' ? herbPage : skill === 'Crafting' ? craftPage : skill === 'Fletching' ? fletchPage : farmPage, java.awt.BorderLayout.CENTER);
     pages.revalidate();
     pages.repaint();
     heading.setText(skill + ' Configuration');
@@ -2083,6 +2420,7 @@ var showWindow = () => {
   herbButton.addActionListener(() => selectSkill('Herblore'));
   craftButton.addActionListener(() => selectSkill('Crafting'));
   fletchButton.addActionListener(() => selectSkill('Fletching'));
+  farmButton.addActionListener(() => selectSkill('Farming'));
   selectSkill(activeViewSkill);
   updateStartButtonText();
   startButton.addActionListener(() => {
@@ -2120,11 +2458,20 @@ var showWindow = () => {
         return;
       }
     }
+    if (chosenSkills.includes('Farming')) {
+      var anyFarm = farmRows.some(r => r.checkbox.isSelected());
+      if (!anyFarm) {
+        javax.swing.JOptionPane.showMessageDialog(frame, 'Farming is enabled in the queue, but no seedlings are selected.');
+        selectSkill('Farming');
+        return;
+      }
+    }
     var settings = {
       skill: chosenSkills[0],
       skills: chosenSkills,
       fletching: fletchRows.filter(row => row.checkbox.isSelected()).map(row => row.job.key),
       crafting: craftRows.filter(row => row.checkbox.isSelected()).map(row => row.job.key),
+      farming: farmRows.filter(row => row.checkbox.isSelected()).map(row => row.recipe.key),
       progressive: progressive.isSelected(),
       chemistry: chemistry.isSelected(),
       targetLevel,
@@ -2132,12 +2479,12 @@ var showWindow = () => {
       playStyle: styleCombo.getSelectedIndex() === 1 ? 'lazy' : 'normal',
       randomAfk: afk.isSelected()
     };
-    var _iterator11 = _createForOfIteratorHelper(rows),
-      _step11;
+    var _iterator14 = _createForOfIteratorHelper(rows),
+      _step14;
     try {
-      for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+      for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
         var _row$recipes$name, _row$recipes;
-        var row = _step11.value;
+        var row = _step14.value;
         var selection = {
           clean: row.clean.isSelected(),
           unfinished: row.unfinished.isSelected(),
@@ -2146,9 +2493,9 @@ var showWindow = () => {
         settings.herbs[row.herb.key] = selection;
       }
     } catch (err) {
-      _iterator11.e(err);
+      _iterator14.e(err);
     } finally {
-      _iterator11.f();
+      _iterator14.f();
     }
     saveSettings(settings);
     closeWindow();
@@ -2189,7 +2536,7 @@ function onGameTick() {
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var skill = _step.value;
-          var counters = skill === 'Fletching' ? ['cut', 'string', 'darts', 'bolts', 'arrows'] : skill === 'Crafting' ? ['gems'] : ['clean', 'unfinished', 'finished'];
+          var counters = skill === 'Fletching' ? ['cut', 'string', 'darts', 'bolts', 'arrows'] : skill === 'Crafting' ? ['gems'] : skill === 'Farming' ? ['plant', 'water'] : ['clean', 'unfinished', 'finished'];
           for (var _i = 0, _counters = counters; _i < _counters.length; _i++) {
             var name = _counters[_i];
             game.counter(skill + ' ' + name, 0);

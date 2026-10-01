@@ -1,5 +1,13 @@
 import { CRAFTING, craftingJobs, CHISEL } from './crafting.js';
 import { FLETCHING, fletchingJobs } from './fletching.js';
+import {
+	FARMING,
+	FILLED_PLANT_POT,
+	GARDENING_TROWEL,
+	SEEDLINGS,
+	WATERING_CANS,
+	farmingJobs,
+} from './farming.js';
 /** Run outside the client: node node_modules/tsx/dist/cli.mjs src/bank-stander/verify.ts */
 import {
 	BEST_POTION,
@@ -176,7 +184,8 @@ class FakeGame implements Game {
 			} else {
 				for (const key of Object.keys(this.bag)) {
 					const itemId = Number(key);
-					this.stock[itemId] = this.bank(itemId) + this.inventory(itemId);
+					this.stock[itemId] =
+						this.bank(itemId) + this.inventory(itemId);
 				}
 				this.bag = {};
 			}
@@ -458,16 +467,27 @@ const ticksToFinish = (
 		game.advance();
 		runner.tick();
 	}
-	check(game.stopped, 'Humanized runner terminates: ' + game.logs.join(' | '));
+	check(
+		game.stopped,
+		'Humanized runner terminates: ' + game.logs.join(' | '),
+	);
 	return tick;
 };
-const chainStock = (): Record<number, number> => ({ 199: 31, 227: 31, 221: 31 });
+const chainStock = (): Record<number, number> => ({
+	199: 31,
+	227: 31,
+	221: 31,
+});
 const instant = new FakeGame();
 instant.stock = chainStock();
 instant.delay = 3;
 const instantTicks = ticksToFinish(instant, chain);
 
-const normalConfig: Settings = { ...chain, playStyle: 'normal', randomAfk: false };
+const normalConfig: Settings = {
+	...chain,
+	playStyle: 'normal',
+	randomAfk: false,
+};
 const normal = new FakeGame();
 normal.stock = chainStock();
 normal.delay = 3;
@@ -499,8 +519,14 @@ check(lazyTicks > normalTicks, 'Lazy play style is slower than Normal');
 const afkGame = new FakeGame();
 afkGame.stock = chainStock();
 afkGame.delay = 3;
-ticksToFinish(afkGame, { ...chain, playStyle: 'normal', randomAfk: true }, () => 0);
-const afkBreaks = afkGame.logs.filter((line) => line.includes('Going AFK')).length;
+ticksToFinish(
+	afkGame,
+	{ ...chain, playStyle: 'normal', randomAfk: true },
+	() => 0,
+);
+const afkBreaks = afkGame.logs.filter((line) =>
+	line.includes('Going AFK'),
+).length;
 check(
 	afkBreaks > 0 && afkGame.counts['AFK Breaks'] === afkBreaks,
 	'AFK breaks are logged and counted',
@@ -510,34 +536,49 @@ check(
 	'AFK breaks never lose or skip production',
 );
 check(
-	afkGame.logs.some((line) => line.includes('Play style: Normal, AFK chance this run')),
+	afkGame.logs.some((line) =>
+		line.includes('Play style: Normal, AFK chance this run'),
+	),
 	'AFK chance is rolled and logged once per run',
 );
 
 // "Best available" potion: highest recipe of the herb that the level and bank allow.
 const bestConfig = settings();
-bestConfig.herbs.dwarf = { clean: false, unfinished: false, potion: BEST_POTION };
+bestConfig.herbs.dwarf = {
+	clean: false,
+	unfinished: false,
+	potion: BEST_POTION,
+};
 const bestJobs = jobsFor(bestConfig);
 const plenty = (): number => 100;
 const noMenaphiteSecondary = (id: number): number => (id === 27272 ? 0 : 100);
 check(
-	bestJobs.length === POTIONS.filter((entry) => entry.herb === 'dwarf').length,
+	bestJobs.length ===
+		POTIONS.filter((entry) => entry.herb === 'dwarf').length,
 	'Best available lists every recipe of the herb',
 );
 check(
-	selectBatch(bestJobs, 80, plenty, true)?.job.label.startsWith('Ranging potion') === true,
+	selectBatch(bestJobs, 80, plenty, true)?.job.label.startsWith(
+		'Ranging potion',
+	) === true,
 	'Best available at 80: Ranging potion (Menaphite needs 88)',
 );
 check(
-	selectBatch(bestJobs, 90, plenty, true)?.job.label.startsWith('Menaphite remedy') === true,
+	selectBatch(bestJobs, 90, plenty, true)?.job.label.startsWith(
+		'Menaphite remedy',
+	) === true,
 	'Best available at 90: Menaphite remedy',
 );
 check(
-	selectBatch(bestJobs, 90, plenty, false)?.job.label.startsWith('Menaphite remedy') === true,
+	selectBatch(bestJobs, 90, plenty, false)?.job.label.startsWith(
+		'Menaphite remedy',
+	) === true,
 	'Best available also picks the highest when not progressive',
 );
 check(
-	selectBatch(bestJobs, 90, noMenaphiteSecondary, true)?.job.label.startsWith('Ranging potion') === true,
+	selectBatch(bestJobs, 90, noMenaphiteSecondary, true)?.job.label.startsWith(
+		'Ranging potion',
+	) === true,
 	'Best available falls back when the best secondary is missing',
 );
 check(
@@ -549,7 +590,9 @@ bestRun.lvl = 90;
 bestRun.stock = { 109: 14, 245: 14, 27272: 5 };
 run(bestRun, bestConfig);
 check(
-	bestRun.bank(27205) === 5 && bestRun.bank(169) === 9 && bestRun.bank(109) === 0,
+	bestRun.bank(27205) === 5 &&
+		bestRun.bank(169) === 9 &&
+		bestRun.bank(109) === 0,
 	'Best available makes the top recipe until its secondary runs out, then the next',
 );
 console.log('Bank Stander: ' + checks + ' checks passed.');
@@ -653,12 +696,8 @@ check(
 	'Missing chisel excludes gem cutting',
 );
 check(
-	selectBatch(
-		craftingJobs(cSettings),
-		99,
-		(id) => 100,
-		true,
-	)?.quantity === 27,
+	selectBatch(craftingJobs(cSettings), 99, (id) => 100, true)?.quantity ===
+		27,
 	'27 gems per batch with chisel',
 );
 // Test level lock: Opal at 1, Sapphire at 20
@@ -688,7 +727,11 @@ class CraftGame extends FakeGame {
 		this.production = false;
 		super.advance();
 		this.production = producing && !this.opened;
-		if (this.production && this.inventory(this.first) > 0 && this.inventory(this.second) > 0) {
+		if (
+			this.production &&
+			this.inventory(this.first) > 0 &&
+			this.inventory(this.second) > 0
+		) {
 			const uncut = this.first === CHISEL ? this.second : this.first;
 			this.bag[uncut]--;
 			const out = this.active.outputs[0];
@@ -713,11 +756,18 @@ cg2.stock[CHISEL] = 1;
 cg2.stock[1623] = 54; // 54 uncut sapphires = 2 batches of 27
 run(cg2, { ...cSettings, crafting: ['Cut Sapphire'] }, 3000);
 check(cg2.bank(1607) === 54, '54 cut sapphires in bank across 2 batches');
-check(cg2.bank(CHISEL) === 1, 'Chisel is retained in bank after all batches finished');
-const chiselWithdrawals = cg2.actions.filter((a) => a === 'withdraw:' + CHISEL + ':1').length;
+check(
+	cg2.bank(CHISEL) === 1,
+	'Chisel is retained in bank after all batches finished',
+);
+const chiselWithdrawals = cg2.actions.filter(
+	(a) => a === 'withdraw:' + CHISEL + ':1',
+).length;
 check(
 	chiselWithdrawals === 1,
-	'Chisel withdrawn only ONCE across multiple batches (actual: ' + chiselWithdrawals + ')',
+	'Chisel withdrawn only ONCE across multiple batches (actual: ' +
+		chiselWithdrawals +
+		')',
 );
 
 // Pre-held chisel test: Starting with chisel already in inventory should withdraw it 0 times
@@ -727,8 +777,13 @@ cg3.bag[CHISEL] = 1; // pre-held
 cg3.stock[1623] = 27;
 run(cg3, { ...cSettings, crafting: ['Cut Sapphire'] });
 check(cg3.bank(1607) === 27, '27 cut sapphires in bank with pre-held chisel');
-check(cg3.bank(CHISEL) === 1, 'Pre-held chisel retained in bank upon script completion');
-const preHeldWithdrawals = cg3.actions.filter((a) => a === 'withdraw:' + CHISEL + ':1').length;
+check(
+	cg3.bank(CHISEL) === 1,
+	'Pre-held chisel retained in bank upon script completion',
+);
+const preHeldWithdrawals = cg3.actions.filter(
+	(a) => a === 'withdraw:' + CHISEL + ':1',
+).length;
 check(
 	preHeldWithdrawals === 0,
 	'Pre-held chisel withdrawn 0 times (actual: ' + preHeldWithdrawals + ')',
@@ -755,7 +810,11 @@ class MultiSkillGame extends FakeGame {
 		this.production = false;
 		super.advance();
 		this.production = producing && !this.opened;
-		if (this.production && this.inventory(this.first) > 0 && this.inventory(this.second) > 0) {
+		if (
+			this.production &&
+			this.inventory(this.first) > 0 &&
+			this.inventory(this.second) > 0
+		) {
 			// Crafting gems (Chisel 1755 + Uncut Sapphire 1623 -> Cut Sapphire 1607)
 			if (this.first === CHISEL || this.second === CHISEL) {
 				const uncut = this.first === CHISEL ? this.second : this.first;
@@ -786,14 +845,131 @@ mg.stock[1511] = 27; // 27 normal logs
 
 run(mg, multiSettings, 3000);
 
-check(mg.bank(249) === 28, 'Multi-skill: 28 clean guam herbs deposited from Herblore phase');
-check(mg.bank(1607) === 27, 'Multi-skill: 27 cut sapphires deposited from Crafting phase');
-check(mg.bank(50) === 27, 'Multi-skill: 27 shortbow (u) deposited from Fletching phase');
+check(
+	mg.bank(249) === 28,
+	'Multi-skill: 28 clean guam herbs deposited from Herblore phase',
+);
+check(
+	mg.bank(1607) === 27,
+	'Multi-skill: 27 cut sapphires deposited from Crafting phase',
+);
+check(
+	mg.bank(50) === 27,
+	'Multi-skill: 27 shortbow (u) deposited from Fletching phase',
+);
 check(mg.bank(CHISEL) === 1, 'Multi-skill: Chisel retained in bank');
 check(mg.bank(946) === 1, 'Multi-skill: Knife retained in bank');
-check(mg.counts['Herblore clean'] === 28, 'Multi-skill: Herblore clean counter is 28');
-check(mg.counts['Crafting gems'] === 27, 'Multi-skill: Crafting gems counter is 27');
-check(mg.counts['Fletching cut'] === 27, 'Multi-skill: Fletching cut counter is 27');
-check(mg.stopped, 'Multi-skill: Runner gracefully terminated after completing all queues');
+check(
+	mg.counts['Herblore clean'] === 28,
+	'Multi-skill: Herblore clean counter is 28',
+);
+check(
+	mg.counts['Crafting gems'] === 27,
+	'Multi-skill: Crafting gems counter is 27',
+);
+check(
+	mg.counts['Fletching cut'] === 27,
+	'Multi-skill: Fletching cut counter is 27',
+);
+check(
+	mg.stopped,
+	'Multi-skill: Runner gracefully terminated after completing all queues',
+);
 
 console.log('Bank Stander with Multi-Skill: ' + checks + ' checks passed.');
+
+const farmSettings: Settings = {
+	skill: 'Farming',
+	progressive: true,
+	chemistry: false,
+	targetLevel: 0,
+	herbs: {},
+	farming: SEEDLINGS.map((recipe) => recipe.key),
+};
+check(SEEDLINGS.length === 24, '24 seedling recipes');
+check(
+	FARMING.length === SEEDLINGS.length * 2,
+	'Each seedling has planting and watering jobs',
+);
+const oak = SEEDLINGS.find((recipe) => recipe.key === 'oak')!;
+const redwood = SEEDLINGS.find((recipe) => recipe.key === 'redwood')!;
+const staged = selectBatch(
+	farmingJobs(farmSettings),
+	99,
+	(id) =>
+		({
+			[GARDENING_TROWEL]: 1,
+			[FILLED_PLANT_POT]: 1,
+			[oak.seed]: 1,
+			[redwood.seedling]: 1,
+			[WATERING_CANS[0]]: 1,
+		})[id] ?? 0,
+	true,
+);
+check(staged?.job.key === 'oak', 'Planting finishes before watering begins');
+check(staged?.tool === GARDENING_TROWEL, 'Gardening trowel is mandatory');
+check(
+	selectBatch(
+		farmingJobs({ ...farmSettings, farming: ['oak'] }),
+		99,
+		(id) => ({ [FILLED_PLANT_POT]: 1, [oak.seed]: 1 })[id] ?? 0,
+		true,
+	) === null,
+	'Missing gardening trowel prevents planting',
+);
+
+class FarmingGame extends FakeGame {
+	combine(first: number, second: number): void {
+		const recipe = SEEDLINGS.find(
+			(entry) =>
+				(first === FILLED_PLANT_POT && second === entry.seed) ||
+				(second === FILLED_PLANT_POT && first === entry.seed),
+		);
+		if (recipe) {
+			check(
+				this.inventory(GARDENING_TROWEL) > 0,
+				'Planting has a gardening trowel',
+			);
+			this.bag[FILLED_PLANT_POT]--;
+			this.bag[recipe.seed]--;
+			this.bag[recipe.seedling] = this.inventory(recipe.seedling) + 1;
+			this.actions.push('plant:' + recipe.key);
+			return;
+		}
+
+		const wateringCan = WATERING_CANS.find(
+			(id) => id === first || id === second,
+		);
+		const seedling = SEEDLINGS.find(
+			(entry) => entry.seedling === first || entry.seedling === second,
+		);
+		if (!wateringCan || !seedling)
+			throw new Error('Unknown Farming action');
+		this.bag[wateringCan]--;
+		this.bag[seedling.seedling]--;
+		const nextCan = wateringCan === 5333 ? 5331 : wateringCan - 1;
+		this.bag[nextCan] = this.inventory(nextCan) + 1;
+		this.bag[seedling.watered] = this.inventory(seedling.watered) + 1;
+		this.actions.push('water:' + seedling.key);
+	}
+	makeVisible(): boolean {
+		return false;
+	}
+}
+
+const fg = new FarmingGame();
+fg.lvl = oak.level;
+fg.stock[GARDENING_TROWEL] = 1;
+fg.stock[FILLED_PLANT_POT] = 14;
+fg.stock[oak.seed] = 14;
+fg.stock[WATERING_CANS[0]] = 2;
+run(fg, { ...farmSettings, farming: ['oak'] }, 5000);
+check(fg.bank(oak.watered) === 14, '14 Oak seedlings planted and watered');
+check(fg.bank(GARDENING_TROWEL) === 1, 'Gardening trowel is retained');
+const firstWater = fg.actions.findIndex((action) => action === 'water:oak');
+const lastPlant = fg.actions.lastIndexOf('plant:oak');
+check(firstWater > lastPlant, 'All seeds are planted before watering starts');
+check(fg.counts['Farming plant'] === 14, 'Farming planting counter is 14');
+check(fg.counts['Farming water'] === 14, 'Farming watering counter is 14');
+
+console.log('Bank Stander with Farming: ' + checks + ' checks passed.');

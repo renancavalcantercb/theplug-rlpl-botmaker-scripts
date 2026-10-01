@@ -1,14 +1,16 @@
 import { HERBS } from './herblore.js';
 import { FLETCHING } from './fletching.js';
 import { CRAFTING } from './crafting.js';
+import { SEEDLINGS } from './farming.js';
 
-export type SkillType = 'Herblore' | 'Crafting' | 'Fletching';
+export type SkillType = 'Herblore' | 'Crafting' | 'Fletching' | 'Farming';
 export type PlayStyle = 'normal' | 'lazy';
 
 export const SKILL_ORDER: readonly SkillType[] = [
 	'Herblore',
 	'Crafting',
 	'Fletching',
+	'Farming',
 ];
 
 export interface Selection {
@@ -22,6 +24,7 @@ export interface Settings {
 	skills?: SkillType[];
 	fletching?: string[];
 	crafting?: string[];
+	farming?: string[];
 	progressive: boolean;
 	chemistry: boolean;
 	targetLevel: number; // 0 means no target; reaching 99 alone does not stop production.
@@ -35,12 +38,14 @@ const CACHE_PREFIX = 'bankStander.';
 const HERB_PREFIX = 'bankStander.herblore.';
 const FLETCH_PREFIX = 'bankStander.fletching.';
 const CRAFT_PREFIX = 'bankStander.crafting.';
+const FARM_PREFIX = 'bankStander.farming.';
 
 export const defaultSettings: Settings = {
 	skill: 'Herblore',
 	skills: ['Herblore', 'Crafting', 'Fletching'],
 	fletching: [],
 	crafting: [],
+	farming: [],
 	progressive: true,
 	chemistry: false,
 	targetLevel: 0,
@@ -60,20 +65,25 @@ export const loadSettings = (): Settings => {
 			herbs: {},
 			fletching: [],
 			crafting: [],
+			farming: [],
 		};
 	}
 
 	const playStyle: PlayStyle =
-		bot.bmCache.getString(CACHE_PREFIX + 'playStyle', 'normal') === 'lazy' ? 'lazy' : 'normal';
+		bot.bmCache.getString(CACHE_PREFIX + 'playStyle', 'normal') === 'lazy'
+			? 'lazy'
+			: 'normal';
 	const randomAfk = bot.bmCache.getBoolean(CACHE_PREFIX + 'randomAfk', true);
 
 	const skillStr = bot.bmCache.getString(CACHE_PREFIX + 'skill', 'Herblore');
 	const skill: SkillType =
-		skillStr === 'Fletching'
-			? 'Fletching'
-			: skillStr === 'Crafting'
-				? 'Crafting'
-				: 'Herblore';
+		skillStr === 'Farming'
+			? 'Farming'
+			: skillStr === 'Fletching'
+				? 'Fletching'
+				: skillStr === 'Crafting'
+					? 'Crafting'
+					: 'Herblore';
 
 	const hasMultiSkillCache = bot.bmCache.getBoolean(
 		CACHE_PREFIX + 'skills.configured',
@@ -91,7 +101,10 @@ export const loadSettings = (): Settings => {
 		skills.push(skill);
 	}
 
-	const progressive = bot.bmCache.getBoolean(HERB_PREFIX + 'progressive', true);
+	const progressive = bot.bmCache.getBoolean(
+		HERB_PREFIX + 'progressive',
+		true,
+	);
 	const chemistry = bot.bmCache.getBoolean(HERB_PREFIX + 'chemistry', false);
 	const targetLevel = bot.bmCache.getInt(HERB_PREFIX + 'target', 0);
 
@@ -125,11 +138,19 @@ export const loadSettings = (): Settings => {
 		}
 	}
 
+	const farming: string[] = [];
+	for (const recipe of SEEDLINGS) {
+		if (bot.bmCache.getBoolean(FARM_PREFIX + recipe.key, false)) {
+			farming.push(recipe.key);
+		}
+	}
+
 	return {
 		skill,
 		skills,
 		fletching,
 		crafting,
+		farming,
 		progressive,
 		chemistry,
 		targetLevel,
@@ -143,7 +164,10 @@ export const saveSettings = (settings: Settings): void => {
 	bot.bmCache.saveBoolean(CACHE_PREFIX + 'configured', true);
 	bot.bmCache.saveBoolean(HERB_PREFIX + 'configured', true);
 	bot.bmCache.saveBoolean(CACHE_PREFIX + 'skills.configured', true);
-	bot.bmCache.saveString(CACHE_PREFIX + 'skill', settings.skill ?? 'Herblore');
+	bot.bmCache.saveString(
+		CACHE_PREFIX + 'skill',
+		settings.skill ?? 'Herblore',
+	);
 
 	const enabledSet = new Set(
 		settings.skills ?? [settings.skill ?? 'Herblore'],
@@ -155,8 +179,14 @@ export const saveSettings = (settings: Settings): void => {
 	bot.bmCache.saveBoolean(HERB_PREFIX + 'progressive', settings.progressive);
 	bot.bmCache.saveBoolean(HERB_PREFIX + 'chemistry', settings.chemistry);
 	bot.bmCache.saveInt(HERB_PREFIX + 'target', settings.targetLevel);
-	bot.bmCache.saveString(CACHE_PREFIX + 'playStyle', settings.playStyle ?? 'normal');
-	bot.bmCache.saveBoolean(CACHE_PREFIX + 'randomAfk', settings.randomAfk ?? true);
+	bot.bmCache.saveString(
+		CACHE_PREFIX + 'playStyle',
+		settings.playStyle ?? 'normal',
+	);
+	bot.bmCache.saveBoolean(
+		CACHE_PREFIX + 'randomAfk',
+		settings.randomAfk ?? true,
+	);
 
 	for (const herb of HERBS) {
 		const sel = settings.herbs[herb.key] ?? {
@@ -185,6 +215,14 @@ export const saveSettings = (settings: Settings): void => {
 		bot.bmCache.saveBoolean(
 			CRAFT_PREFIX + job.key,
 			selectedCraft.has(job.key),
+		);
+	}
+
+	const selectedFarm = new Set(settings.farming ?? []);
+	for (const recipe of SEEDLINGS) {
+		bot.bmCache.saveBoolean(
+			FARM_PREFIX + recipe.key,
+			selectedFarm.has(recipe.key),
 		);
 	}
 };

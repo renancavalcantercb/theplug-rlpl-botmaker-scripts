@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- Java Swing bindings. */
 import { CRAFTING } from './crafting.js';
 import { FLETCHING } from './fletching.js';
+import { SEEDLINGS } from './farming.js';
 import { BEST_POTION, HERBS, POTIONS } from './herblore.js';
 import {
 	SKILL_ORDER,
@@ -31,14 +32,14 @@ export const showWindow = (): void => {
 
 	// Deep Purple Dark Aesthetic (identical to AIO Cooking)
 	// A single packed RGB integer avoids Rhino selecting Color(float, float, float).
-	const background = new java.awt.Color(0x130E20); // Deep velvet obsidian purple
-	const surface = new java.awt.Color(0x211738);    // Rich card surface purple
-	const borderLine = new java.awt.Color(0x3E2D60); // Subtle glowing purple border
-	const foreground = new java.awt.Color(0xF5EEFC); // Crisp lavender-white text
-	const muted = new java.awt.Color(0xA594C6);      // Soft lilac for subtitles and hints
-	const accent = new java.awt.Color(0xC084FC);     // Neon lilac/violet for titles & highlights
-	const buttonBg = new java.awt.Color(0x8B5CF6);   // Vivid electric purple CTA
-	const buttonFg = new java.awt.Color(0xFFFFFF);   // Pure white button text
+	const background = new java.awt.Color(0x130e20); // Deep velvet obsidian purple
+	const surface = new java.awt.Color(0x211738); // Rich card surface purple
+	const borderLine = new java.awt.Color(0x3e2d60); // Subtle glowing purple border
+	const foreground = new java.awt.Color(0xf5eefc); // Crisp lavender-white text
+	const muted = new java.awt.Color(0xa594c6); // Soft lilac for subtitles and hints
+	const accent = new java.awt.Color(0xc084fc); // Neon lilac/violet for titles & highlights
+	const buttonBg = new java.awt.Color(0x8b5cf6); // Vivid electric purple CTA
+	const buttonFg = new java.awt.Color(0xffffff); // Pure white button text
 
 	const panel = (
 		layout:
@@ -65,11 +66,18 @@ export const showWindow = (): void => {
 		return l;
 	};
 
-	const createSectionBorder = (title: string): javax.swing.border.TitledBorder => {
+	const createSectionBorder = (
+		title: string,
+	): javax.swing.border.TitledBorder => {
 		const line = javax.swing.BorderFactory.createLineBorder(borderLine, 1);
-		const border = javax.swing.BorderFactory.createTitledBorder(line, title);
+		const border = javax.swing.BorderFactory.createTitledBorder(
+			line,
+			title,
+		);
 		border.setTitleColor(accent);
-		border.setTitleFont(new java.awt.Font('Dialog', java.awt.Font.BOLD, 12));
+		border.setTitleFont(
+			new java.awt.Font('Dialog', java.awt.Font.BOLD, 12),
+		);
 		return border;
 	};
 
@@ -113,7 +121,7 @@ export const showWindow = (): void => {
 	};
 
 	frame = new javax.swing.JFrame(
-		'Bank Stander - Multi-Skill (Herblore, Crafting & Fletching) | by xulixna',
+		'Bank Stander - Multi-Skill (Herblore, Crafting, Fletching & Farming) | by xulixna',
 	);
 
 	const mainPanel = panel(new java.awt.BorderLayout(12, 12));
@@ -129,7 +137,7 @@ export const showWindow = (): void => {
 	titleLabel.setHorizontalAlignment(0);
 
 	const subtitleLabel = label(
-		'Multi-Skill Automation (Herblore • Crafting • Fletching) • by xulixna',
+		'Multi-Skill Automation (Herblore • Crafting • Fletching • Farming) • by xulixna',
 		false,
 	);
 	subtitleLabel.setForeground(muted);
@@ -187,9 +195,21 @@ export const showWindow = (): void => {
 	fletchRow.add(fletchCb, java.awt.BorderLayout.WEST);
 	fletchRow.add(fletchButton, java.awt.BorderLayout.CENTER);
 
+	const farmCb = checkbox('', initialEnabled.has('Farming'), surface);
+	farmCb.setToolTipText('Include Farming in the execution queue');
+	const farmButton = new javax.swing.JButton('4. Farming');
+	farmButton.setFont(new java.awt.Font('Dialog', java.awt.Font.BOLD, 12));
+	farmButton.setFocusPainted(false);
+	(farmButton as any).setHorizontalAlignment(2);
+
+	const farmRow = panel(new java.awt.BorderLayout(4, 0), surface);
+	farmRow.add(farmCb, java.awt.BorderLayout.WEST);
+	farmRow.add(farmButton, java.awt.BorderLayout.CENTER);
+
 	skillBox.add(herbRow);
 	skillBox.add(craftRow);
 	skillBox.add(fletchRow);
+	skillBox.add(farmRow);
 	sidebarArea.add(skillBox, java.awt.BorderLayout.NORTH);
 
 	const infoBox = panel(new java.awt.GridLayout(0, 1, 0, 4), surface);
@@ -206,6 +226,9 @@ export const showWindow = (): void => {
 	const info4 = label('3. Fletching (Bows & darts)', false);
 	info4.setForeground(accent);
 	info4.setFont(new java.awt.Font('Dialog', java.awt.Font.PLAIN, 11));
+	const infoFarm = label('4. Farming (Seedlings)', false);
+	infoFarm.setForeground(accent);
+	infoFarm.setFont(new java.awt.Font('Dialog', java.awt.Font.PLAIN, 11));
 	const info5 = label('Auto-deposits & advances', false);
 	info5.setForeground(muted);
 	info5.setFont(new java.awt.Font('Dialog', java.awt.Font.ITALIC, 11));
@@ -216,6 +239,7 @@ export const showWindow = (): void => {
 	infoBox.add(info2);
 	infoBox.add(info3);
 	infoBox.add(info4);
+	infoBox.add(infoFarm);
 	infoBox.add(info5);
 	infoBox.add(info6);
 	sidebarArea.add(infoBox, java.awt.BorderLayout.CENTER);
@@ -353,7 +377,11 @@ export const showWindow = (): void => {
 			(entry) => entry.name === savedPotion,
 		);
 		potion.setSelectedIndex(
-			savedPotion === BEST_POTION ? 1 : (matchedIndex >= 0 ? matchedIndex + 2 : 0),
+			savedPotion === BEST_POTION
+				? 1
+				: matchedIndex >= 0
+					? matchedIndex + 2
+					: 0,
 		);
 
 		const recipePanel = panel(new java.awt.BorderLayout(4, 4), surface);
@@ -407,7 +435,9 @@ export const showWindow = (): void => {
 		holder.add(section(title, grid), java.awt.BorderLayout.NORTH);
 
 		const scroll = new javax.swing.JScrollPane(holder);
-		scroll.setBorder(javax.swing.BorderFactory.createLineBorder(borderLine, 1));
+		scroll.setBorder(
+			javax.swing.BorderFactory.createLineBorder(borderLine, 1),
+		);
 		(scroll as any).getViewport().setBackground(background);
 		scroll.getVerticalScrollBar().setUnitIncrement(16);
 
@@ -591,6 +621,31 @@ export const showWindow = (): void => {
 		},
 	);
 
+	// Farming Content Page (seed -> seedling -> watered seedling)
+	const initialFarm = new Set(initial.farming ?? []);
+	const farmRows = SEEDLINGS.map((recipe) => ({
+		recipe,
+		checkbox: checkbox(
+			recipe.label + ' seedling  -  Lv. ' + recipe.level,
+			initialFarm.has(recipe.key),
+		),
+	}));
+
+	const farmGrid = panel(new java.awt.GridLayout(0, 2, 8, 8));
+	for (const row of farmRows) farmGrid.add(row.checkbox);
+
+	const farmPage = checklistPage(
+		'Seedlings (plant, then water)',
+		'Requires a Gardening trowel, filled plant pots and charged watering cans. Plants all selected seeds before watering.',
+		farmGrid,
+		() => {
+			for (const row of farmRows) row.checkbox.setSelected(true);
+		},
+		() => {
+			for (const row of farmRows) row.checkbox.setSelected(false);
+		},
+	);
+
 	// Footer Action Panel (Start Button + Author info)
 	const footer = panel(new java.awt.BorderLayout(0, 10));
 	footer.add(optionsPanel, java.awt.BorderLayout.NORTH);
@@ -621,6 +676,7 @@ export const showWindow = (): void => {
 		if (herbCb.isSelected()) result.push('Herblore');
 		if (craftCb.isSelected()) result.push('Crafting');
 		if (fletchCb.isSelected()) result.push('Fletching');
+		if (farmCb.isSelected()) result.push('Farming');
 		return result;
 	};
 
@@ -631,20 +687,20 @@ export const showWindow = (): void => {
 		} else if (chosen.length === 1) {
 			startButton.setText('Start ' + chosen[0]);
 		} else {
-			startButton.setText(
-				`Start Multi-Skill (${chosen.join(' ➔ ')})`,
-			);
+			startButton.setText(`Start Multi-Skill (${chosen.join(' ➔ ')})`);
 		}
 	};
 
 	herbCb.addActionListener(() => updateStartButtonText());
 	craftCb.addActionListener(() => updateStartButtonText());
 	fletchCb.addActionListener(() => updateStartButtonText());
+	farmCb.addActionListener(() => updateStartButtonText());
 
 	const updateSkillNavButtons = (): void => {
 		const isHerb = activeViewSkill === 'Herblore';
 		const isCraft = activeViewSkill === 'Crafting';
 		const isFletch = activeViewSkill === 'Fletching';
+		const isFarm = activeViewSkill === 'Farming';
 
 		const setStyle = (btn: javax.swing.JButton, active: boolean) => {
 			btn.setBackground(active ? buttonBg : surface);
@@ -663,6 +719,7 @@ export const showWindow = (): void => {
 		setStyle(herbButton, isHerb);
 		setStyle(craftButton, isCraft);
 		setStyle(fletchButton, isFletch);
+		setStyle(farmButton, isFarm);
 	};
 
 	const selectSkill = (skill: SkillType): void => {
@@ -673,7 +730,9 @@ export const showWindow = (): void => {
 				? herbPage
 				: skill === 'Crafting'
 					? craftPage
-					: fletchPage,
+					: skill === 'Fletching'
+						? fletchPage
+						: farmPage,
 			java.awt.BorderLayout.CENTER,
 		);
 		pages.revalidate();
@@ -685,6 +744,7 @@ export const showWindow = (): void => {
 	herbButton.addActionListener(() => selectSkill('Herblore'));
 	craftButton.addActionListener(() => selectSkill('Crafting'));
 	fletchButton.addActionListener(() => selectSkill('Fletching'));
+	farmButton.addActionListener(() => selectSkill('Farming'));
 	selectSkill(activeViewSkill);
 	updateStartButtonText();
 
@@ -755,6 +815,18 @@ export const showWindow = (): void => {
 			}
 		}
 
+		if (chosenSkills.includes('Farming')) {
+			const anyFarm = farmRows.some((r) => r.checkbox.isSelected());
+			if (!anyFarm) {
+				javax.swing.JOptionPane.showMessageDialog(
+					frame,
+					'Farming is enabled in the queue, but no seedlings are selected.',
+				);
+				selectSkill('Farming');
+				return;
+			}
+		}
+
 		const settings: Settings = {
 			skill: chosenSkills[0],
 			skills: chosenSkills,
@@ -764,6 +836,9 @@ export const showWindow = (): void => {
 			crafting: craftRows
 				.filter((row) => row.checkbox.isSelected())
 				.map((row) => row.job.key),
+			farming: farmRows
+				.filter((row) => row.checkbox.isSelected())
+				.map((row) => row.recipe.key),
 			progressive: progressive.isSelected(),
 			chemistry: chemistry.isSelected(),
 			targetLevel,
@@ -779,7 +854,8 @@ export const showWindow = (): void => {
 				potion:
 					row.potion.getSelectedIndex() === 1
 						? BEST_POTION
-						: (row.recipes[row.potion.getSelectedIndex() - 2]?.name ?? ''),
+						: (row.recipes[row.potion.getSelectedIndex() - 2]
+								?.name ?? ''),
 			};
 			settings.herbs[row.herb.key] = selection;
 		}

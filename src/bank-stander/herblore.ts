@@ -394,11 +394,16 @@ export type Kind =
 	| 'darts'
 	| 'bolts'
 	| 'arrows'
-	| 'gems';
+	| 'gems'
+	| 'plant'
+	| 'water';
 export interface Job {
 	tool?: number;
+	tools?: readonly number[];
+	passiveTool?: boolean;
 	limit?: number;
 	direct?: boolean;
+	stage?: number;
 	key: string;
 	label: string;
 	kind: Kind;
@@ -410,6 +415,7 @@ export interface Job {
 export interface Batch {
 	job: Job;
 	quantity: number;
+	tool?: number;
 }
 export type Count = (id: number) => number;
 
@@ -487,12 +493,30 @@ export const selectBatch = (
 	let chosen: Batch | null = null;
 	for (const job of jobs) {
 		if (job.level > level) continue;
-		if (job.tool && count(job.tool) < 1) continue;
+		const tool =
+			job.tool === undefined
+				? job.tools?.find((id) => count(id) > 0)
+				: count(job.tool) > 0
+					? job.tool
+					: undefined;
+		if (
+			(job.tool !== undefined || job.tools !== undefined) &&
+			tool === undefined
+		)
+			continue;
 		let quantity = job.limit ?? (job.kind === 'clean' ? 28 : 14);
 		for (const id of job.inputs) quantity = Math.min(quantity, count(id));
 		if (quantity < 1) continue;
-		if (!chosen || (progressive && job.level > chosen.job.level))
-			chosen = { job, quantity };
+		const stage = job.stage ?? 0;
+		const chosenStage = chosen?.job.stage ?? 0;
+		if (
+			!chosen ||
+			stage < chosenStage ||
+			(stage === chosenStage &&
+				progressive &&
+				job.level > chosen.job.level)
+		)
+			chosen = { job, quantity, tool };
 		if (!progressive && chosen) break;
 	}
 	return chosen;

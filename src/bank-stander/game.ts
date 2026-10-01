@@ -18,6 +18,8 @@ const skillToApi = (skill?: SkillType): net.runelite.api.Skill => {
 			return net.runelite.api.Skill.FLETCHING;
 		case 'Crafting':
 			return net.runelite.api.Skill.CRAFTING;
+		case 'Farming':
+			return net.runelite.api.Skill.FARMING;
 		case 'Herblore':
 		default:
 			return net.runelite.api.Skill.HERBLORE;
@@ -97,7 +99,8 @@ export const game: Game = {
 			const name = player ? String(player.getName() ?? '') : '';
 			const total = client.getTotalLevel();
 			let seed = total > 0 ? total * 17 : 1337;
-			for (const char of name) seed = (seed * 31 + (char.codePointAt(0) ?? 0)) % 2_147_483_647;
+			for (const char of name)
+				seed = (seed * 31 + (char.codePointAt(0) ?? 0)) % 2_147_483_647;
 			return Math.abs(seed);
 		} catch {
 			return 1337;

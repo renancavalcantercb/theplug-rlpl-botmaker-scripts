@@ -1,5 +1,6 @@
 import { craftingJobs } from './crafting.js';
 import { fletchingJobs } from './fletching.js';
+import { farmingJobs } from './farming.js';
 import {
 	jobsFor,
 	selectBatch,
@@ -105,6 +106,8 @@ export class HerbloreRunner {
 		bolts: 0,
 		arrows: 0,
 		gems: 0,
+		plant: 0,
+		water: 0,
 	};
 
 	constructor(
@@ -125,7 +128,9 @@ export class HerbloreRunner {
 					? jobsFor(settings)
 					: skill === 'Crafting'
 						? craftingJobs(settings)
-						: fletchingJobs(settings);
+						: skill === 'Fletching'
+							? fletchingJobs(settings)
+							: farmingJobs(settings);
 			if (jobs.length > 0) {
 				this.phases.push({ skill, jobs });
 			}
@@ -200,7 +205,10 @@ export class HerbloreRunner {
 		if (!this.humanized) return 0;
 		const seed = Math.abs(this.game.accountSeed?.() ?? 1337);
 		if (this.lazy)
-			return Math.max(4, Math.min(16, 5 + (seed % 6) + this.randomInt(-1, 6)));
+			return Math.max(
+				4,
+				Math.min(16, 5 + (seed % 6) + this.randomInt(-1, 6)),
+			);
 		return Math.max(1, Math.min(4, 1 + (seed % 2) + this.randomInt(0, 1)));
 	}
 
@@ -213,13 +221,18 @@ export class HerbloreRunner {
 
 	// Only AFK while a batch is already being made.
 	private maybeAfk(action: string): boolean {
-		if (!this.humanized || !this.settings.randomAfk || this.afkCooldown > 0) return false;
+		if (!this.humanized || !this.settings.randomAfk || this.afkCooldown > 0)
+			return false;
 		if (this.random() >= this.afkChance) return false;
-		const ticks = this.lazy ? this.randomInt(10, 50) : this.randomInt(4, 20);
+		const ticks = this.lazy
+			? this.randomInt(10, 50)
+			: this.randomInt(4, 20);
 		this.afks++;
 		this.afkCooldown = this.randomInt(60, 200);
 		this.delayTicks = ticks;
-		this.game.log(`Going AFK for ${ticks} ticks (~${(ticks * 0.6).toFixed(1)}s) while ${action}.`);
+		this.game.log(
+			`Going AFK for ${ticks} ticks (~${(ticks * 0.6).toFixed(1)}s) while ${action}.`,
+		);
 		this.game.counter('AFK Breaks', this.afks);
 		return true;
 	}
@@ -366,7 +379,9 @@ export class HerbloreRunner {
 							() => game.emptySlots() === 28,
 							() => {
 								if (!this.advancePhase()) {
-									this.stop('Target level reached; inventory deposited.');
+									this.stop(
+										'Target level reached; inventory deposited.',
+									);
 								}
 							},
 						);
@@ -392,7 +407,9 @@ export class HerbloreRunner {
 					game.level(current.skill),
 					(id) =>
 						game.bank(id) +
-						(current.jobs.some((j) => j.tool === id)
+						(current.jobs.some(
+							(j) => j.tool === id || j.tools?.includes(id),
+						)
 							? game.inventory(id)
 							: 0),
 					this.settings.progressive,
@@ -486,7 +503,7 @@ export class HerbloreRunner {
 				this.withdrawalTicks = 0;
 				this.withdrawalAttempts = 0;
 
-				const tool = this.batch.job.tool;
+				const tool = this.batch.tool;
 				const needsDeposit =
 					tool !== undefined && game.inventory(tool) > 0
 						? game.heldItemIds().some((id) => id !== tool)
@@ -500,16 +517,19 @@ export class HerbloreRunner {
 				break;
 			}
 			case 'deposit': {
-				const tool =
-					this.batch?.job.tool ??
-					this.currentPhase?.jobs.find(
-						(j) =>
-							j.tool !== undefined && game.inventory(j.tool) > 0,
-					)?.tool;
-				if (tool !== undefined && game.inventory(tool) > 0) {
+				const heldTool =
+					this.batch?.tool ??
+					this.currentPhase?.jobs
+						.flatMap((job) =>
+							job.tool === undefined
+								? (job.tools ?? [])
+								: [job.tool, ...(job.tools ?? [])],
+						)
+						.find((id) => game.inventory(id) > 0);
+				if (heldTool !== undefined && game.inventory(heldTool) > 0) {
 					const toDeposit = game
 						.heldItemIds()
-						.filter((id) => id !== tool);
+						.filter((id) => id !== heldTool);
 					if (toDeposit.length === 0) {
 						this.state = 'plan';
 						break;
@@ -566,11 +586,11 @@ export class HerbloreRunner {
 					this.stop('Missing batch.');
 					break;
 				}
-				const items = batch.job.tool
-					? [batch.job.tool, ...batch.job.inputs]
+				const items = batch.tool
+					? [batch.tool, ...batch.job.inputs]
 					: batch.job.inputs;
 				const id = items[this.withdrawalIndex];
-				const requested = id === batch.job.tool ? 1 : batch.quantity;
+				const requested = id === batch.tool ? 1 : batch.quantity;
 				if (id === undefined) {
 					this.state = 'close';
 					break;
@@ -606,7 +626,7 @@ export class HerbloreRunner {
 							batch.quantity +
 							'.',
 					);
-					if (id !== batch.job.tool)
+					if (id !== batch.tool)
 						batch.quantity = Math.min(batch.quantity, held);
 					this.withdrawalIndex++;
 					this.withdrawalAttempts = 0;
@@ -702,8 +722,12 @@ export class HerbloreRunner {
 					this.directActive = false;
 					this.menuOutput = this.outputCount();
 					game.combine(
-						job.tool ?? first,
-						job.tool ? first : job.inputs[1],
+						this.batch?.tool && !job.passiveTool
+							? this.batch.tool
+							: first,
+						this.batch?.tool && !job.passiveTool
+							? first
+							: job.inputs[1],
 					);
 					this.idleTicks = 0;
 					this.state = 'menu';
