@@ -1,4 +1,4 @@
-import { type Job, type Settings } from './herblore.js';
+import { type Batch, type Count, type Job, type Settings } from './herblore.js';
 
 export const GARDENING_TROWEL = 5325;
 export const FILLED_PLANT_POT = 5354;
@@ -283,4 +283,139 @@ export const farmingJobs = (settings: Settings): Job[] => {
 	return FARMING.filter((job) =>
 		selected.has(job.key.replace(/\.water$/, '')),
 	);
+};
+
+/** Fill all 28 slots with one trowel, stacked seed types, and plant pots. */
+export const selectFarmingPlantBatch = (
+	jobs: readonly Job[],
+	level: number,
+	count: Count,
+	progressive: boolean,
+): Batch | null => {
+	if (count(GARDENING_TROWEL) < 1 || count(FILLED_PLANT_POT) < 1) return null;
+
+	const available = jobs.filter(
+		(job) =>
+			job.kind === 'plant' &&
+			job.level <= level &&
+			count(job.inputs[1]) > 0,
+	);
+	if (progressive) available.sort((a, b) => b.level - a.level);
+
+	const steps: Array<{ job: Job; quantity: number }> = [];
+	let total = 0;
+	for (const job of available) {
+		// Seeds stack, but each selected type occupies one inventory slot.
+		const capacityWithType = 27 - (steps.length + 1);
+		if (total >= capacityWithType) break;
+		const quantity = Math.min(
+			count(job.inputs[1]),
+			count(FILLED_PLANT_POT) - total,
+			capacityWithType - total,
+		);
+		if (quantity > 0) {
+			steps.push({ job, quantity });
+			total += quantity;
+		}
+	}
+	if (steps.length === 0 || total < 1) return null;
+
+	return {
+		job: steps[0].job,
+		quantity: total,
+		tool: GARDENING_TROWEL,
+		label:
+			'Mixed seedlings: ' +
+			steps
+				.map((step) => step.job.label + ' x' + step.quantity)
+				.join(', '),
+		steps,
+		withdrawals: [
+			{ id: GARDENING_TROWEL, quantity: 1 },
+			{ id: FILLED_PLANT_POT, quantity: total },
+			...steps.map((step) => ({
+				id: step.job.inputs[1],
+				quantity: step.quantity,
+			})),
+		],
+	};
+};
+
+/** Fill an inventory with as many seedlings as the available can charges allow. */
+export const selectFarmingWaterBatch = (
+	jobs: readonly Job[],
+	level: number,
+	count: Count,
+	progressive: boolean,
+): Batch | null => {
+	const available = jobs.filter(
+		(job) =>
+			job.kind === 'water' &&
+			job.level <= level &&
+			count(job.inputs[0]) > 0,
+	);
+	if (progressive) available.sort((a, b) => b.level - a.level);
+	const totalSeedlings = available.reduce(
+		(total, job) => total + count(job.inputs[0]),
+		0,
+	);
+	if (totalSeedlings < 1) return null;
+
+	const cans: Array<{ id: number; quantity: number }> = [];
+	let canSlots = 0;
+	let charges = 0;
+	let capacity = 0;
+	for (const id of WATERING_CANS) {
+		const availableCans = count(id);
+		const chargesPerCan = id - 5332;
+		for (let index = 0; index < availableCans; index++) {
+			const nextSlots = canSlots + 1;
+			const nextCharges = charges + chargesPerCan;
+			const nextCapacity = Math.min(
+				totalSeedlings,
+				nextCharges,
+				28 - nextSlots,
+			);
+			if (nextCapacity <= capacity) break;
+			const existing = cans.find((can) => can.id === id);
+			if (existing) existing.quantity++;
+			else cans.push({ id, quantity: 1 });
+			canSlots = nextSlots;
+			charges = nextCharges;
+			capacity = nextCapacity;
+		}
+		if (capacity >= totalSeedlings || capacity >= 28 - canSlots) break;
+	}
+	if (capacity < 1 || cans.length === 0) return null;
+
+	const steps: Array<{ job: Job; quantity: number }> = [];
+	let total = 0;
+	for (const job of available) {
+		const quantity = Math.min(count(job.inputs[0]), capacity - total);
+		if (quantity > 0) {
+			steps.push({ job, quantity });
+			total += quantity;
+		}
+		if (total >= capacity) break;
+	}
+
+	return {
+		job: steps[0].job,
+		quantity: total,
+		tool: cans[0].id,
+		dynamicTools: WATERING_CANS,
+		label:
+			'Water mixed seedlings: ' +
+			steps
+				.map((step) => step.job.label + ' x' + step.quantity)
+				.join(', '),
+		steps,
+		withdrawals: [
+			...cans,
+			...steps.map((step) => ({
+				id: step.job.inputs[0],
+				quantity: step.quantity,
+			})),
+		],
+	};
 };

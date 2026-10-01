@@ -7,6 +7,7 @@ import {
 	SEEDLINGS,
 	WATERING_CANS,
 	farmingJobs,
+	selectFarmingPlantBatch,
 } from './farming.js';
 /** Run outside the client: node node_modules/tsx/dist/cli.mjs src/bank-stander/verify.ts */
 import {
@@ -908,6 +909,32 @@ const staged = selectBatch(
 );
 check(staged?.job.key === 'oak', 'Planting finishes before watering begins');
 check(staged?.tool === GARDENING_TROWEL, 'Gardening trowel is mandatory');
+
+const willow = SEEDLINGS.find((recipe) => recipe.key === 'willow')!;
+const mixed = selectFarmingPlantBatch(
+	farmingJobs({ ...farmSettings, farming: ['oak', 'willow'] }),
+	99,
+	(id) =>
+		({
+			[GARDENING_TROWEL]: 1,
+			[FILLED_PLANT_POT]: 100,
+			[willow.seed]: 3,
+			[oak.seed]: 100,
+		})[id] ?? 0,
+	true,
+);
+check(mixed?.quantity === 25, 'Mixed Farming batch fills all 28 slots');
+check(
+	mixed?.steps?.[0].job.key === 'willow' &&
+		mixed.steps[0].quantity === 3 &&
+		mixed.steps[1].job.key === 'oak' &&
+		mixed.steps[1].quantity === 22,
+	'Progressive mixed batch uses scarce better seeds before lower seeds',
+);
+check(
+	mixed?.withdrawals?.[1].quantity === 25 && mixed.withdrawals.length === 4,
+	'Mixed batch withdraws 25 pots and two seed stacks',
+);
 check(
 	selectBatch(
 		farmingJobs({ ...farmSettings, farming: ['oak'] }),
@@ -966,6 +993,11 @@ fg.stock[WATERING_CANS[0]] = 2;
 run(fg, { ...farmSettings, farming: ['oak'] }, 5000);
 check(fg.bank(oak.watered) === 14, '14 Oak seedlings planted and watered');
 check(fg.bank(GARDENING_TROWEL) === 1, 'Gardening trowel is retained');
+check(
+	fg.actions.includes('withdraw:' + WATERING_CANS[0] + ':2') &&
+		fg.actions.includes('withdraw:' + oak.seedling + ':14'),
+	'Watering batches use two full cans for 14 seedlings',
+);
 const firstWater = fg.actions.findIndex((action) => action === 'water:oak');
 const lastPlant = fg.actions.lastIndexOf('plant:oak');
 check(firstWater > lastPlant, 'All seeds are planted before watering starts');
@@ -973,3 +1005,33 @@ check(fg.counts['Farming plant'] === 14, 'Farming planting counter is 14');
 check(fg.counts['Farming water'] === 14, 'Farming watering counter is 14');
 
 console.log('Bank Stander with Farming: ' + checks + ' checks passed.');
+
+const mixedGame = new FarmingGame();
+mixedGame.lvl = willow.level;
+mixedGame.stock[GARDENING_TROWEL] = 1;
+mixedGame.stock[FILLED_PLANT_POT] = 25;
+mixedGame.stock[willow.seed] = 3;
+mixedGame.stock[oak.seed] = 30;
+mixedGame.stock[WATERING_CANS[0]] = 4;
+run(mixedGame, { ...farmSettings, farming: ['oak', 'willow'] }, 9000);
+check(mixedGame.bank(willow.watered) === 3, 'Three Willow seedlings watered');
+check(
+	mixedGame.bank(oak.watered) === 22,
+	'Remaining slots filled with Oak seedlings',
+);
+check(
+	mixedGame.actions.includes('withdraw:' + FILLED_PLANT_POT + ':25') &&
+		mixedGame.actions.includes('withdraw:' + willow.seed + ':3') &&
+		mixedGame.actions.includes('withdraw:' + oak.seed + ':22'),
+	'Mixed planting withdraws the slot-optimized inventory in one trip',
+);
+const mixedPlants = mixedGame.actions.filter((action) =>
+	action.startsWith('plant:'),
+);
+check(
+	mixedPlants.slice(0, 3).every((action) => action === 'plant:willow') &&
+		mixedPlants.slice(3).every((action) => action === 'plant:oak'),
+	'Mixed progressive inventory plants better seeds first without rebanking',
+);
+
+console.log('Bank Stander mixed Farming: ' + checks + ' checks passed.');

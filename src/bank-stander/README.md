@@ -51,7 +51,9 @@ The runner uses two ordered stages:
 1. Plant every selected and available seed into a Filled plant pot (`5354`) while keeping a Gardening trowel (`5325`) in the inventory.
 2. After no selected seeds remain doable, water every produced seedling with charged standard watering cans (`5333` through `5340`).
 
-The watering-can item ID changes as charges are consumed, so the runner resolves the currently charged can before each seedling. Watered seedlings are deposited and can grow into saplings while stored in the bank. Empty watering cans are not treated as charged cans.
+Planting batches use mixed seed types to fill the inventory: one slot for the trowel, one stack slot per seed type, and every remaining slot for filled plant pots. Progressive mode consumes higher-level seeds first and fills unused capacity with the next selected types.
+
+Watering batches also share the inventory intelligently between charged cans and seedlings. The runner calculates the available charges, uses multiple cans when that increases throughput, and resolves the changing watering-can item ID after every seedling. Watered seedlings are deposited and can grow into saplings while stored in the bank. Empty watering cans are not treated as charged cans.
 
 Counters: `Farming plant` and `Farming water`.
 

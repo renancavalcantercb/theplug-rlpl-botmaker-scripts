@@ -416,6 +416,10 @@ export interface Batch {
 	job: Job;
 	quantity: number;
 	tool?: number;
+	label?: string;
+	steps?: Array<{ job: Job; quantity: number }>;
+	withdrawals?: Array<{ id: number; quantity: number }>;
+	dynamicTools?: readonly number[];
 }
 export type Count = (id: number) => number;
 
