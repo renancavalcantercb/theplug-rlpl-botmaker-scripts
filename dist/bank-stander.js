@@ -1263,9 +1263,43 @@ var HerbloreRunner = /*#__PURE__*/function () {
       this.idleTicks = 0;
     }
   }, {
+    key: "heldTool",
+    value: function heldTool() {
+      var _this$batch, _this$currentPhase$jo, _this$currentPhase2;
+      if (((_this$batch = this.batch) === null || _this$batch === void 0 ? void 0 : _this$batch.tool) !== undefined) return this.batch.tool;
+      var _iterator3 = _createForOfIteratorHelper((_this$currentPhase$jo = (_this$currentPhase2 = this.currentPhase) === null || _this$currentPhase2 === void 0 ? void 0 : _this$currentPhase2.jobs) !== null && _this$currentPhase$jo !== void 0 ? _this$currentPhase$jo : []),
+        _step3;
+      try {
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var _job$tools;
+          var job = _step3.value;
+          if (job.tool !== undefined && this.game.inventory(job.tool) > 0) {
+            return job.tool;
+          }
+          var _iterator4 = _createForOfIteratorHelper((_job$tools = job.tools) !== null && _job$tools !== void 0 ? _job$tools : []),
+            _step4;
+          try {
+            for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+              var id = _step4.value;
+              if (this.game.inventory(id) > 0) return id;
+            }
+          } catch (err) {
+            _iterator4.e(err);
+          } finally {
+            _iterator4.f();
+          }
+        }
+      } catch (err) {
+        _iterator3.e(err);
+      } finally {
+        _iterator3.f();
+      }
+      return undefined;
+    }
+  }, {
     key: "tick",
     value: function tick() {
-      var _this$batch;
+      var _this$batch2;
       var game = this.game;
       if (this.state === 'stopped' || !game.loggedIn()) return;
       if (!this.timingReady) this.setupTiming();
@@ -1279,7 +1313,7 @@ var HerbloreRunner = /*#__PURE__*/function () {
         this.targetReached = true;
         this.returnToBank();
       }
-      if (this.observing && (_this$batch = this.batch) !== null && _this$batch !== void 0 && _this$batch.job.chemistry && this.settings.chemistry && !game.equipped(CHEMISTRY)) {
+      if (this.observing && (_this$batch2 = this.batch) !== null && _this$batch2 !== void 0 && _this$batch2.job.chemistry && this.settings.chemistry && !game.equipped(CHEMISTRY)) {
         game.log('Amulet of chemistry depleted; returning to the bank.');
         this.returnToBank();
       }
@@ -1344,20 +1378,20 @@ var HerbloreRunner = /*#__PURE__*/function () {
               return j.tool === id || ((_j$tools = j.tools) === null || _j$tools === void 0 ? void 0 : _j$tools.includes(id));
             }) ? game.inventory(id) : 0), this.settings.progressive);
             if (!this.batch) {
-              var _iterator3 = _createForOfIteratorHelper(current.jobs),
-                _step3;
+              var _iterator5 = _createForOfIteratorHelper(current.jobs),
+                _step5;
               try {
-                for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-                  var job = _step3.value;
+                for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+                  var job = _step5.value;
                   var missing = job.inputs.filter(id => game.bank(id) < 1);
                   if (missing.length > 0 || job.level > game.level(current.skill)) {
                     game.log("[".concat(current.skill, "] ").concat(job.label, ": ") + (job.level > game.level(current.skill) ? 'requires level ' + job.level : 'missing item IDs ' + missing.join(', ')));
                   }
                 }
               } catch (err) {
-                _iterator3.e(err);
+                _iterator5.e(err);
               } finally {
-                _iterator3.f();
+                _iterator5.f();
               }
               game.log("[".concat(current.skill, "] No more doable tasks with current supplies."));
               if (game.emptySlots() < 28) {
@@ -1405,11 +1439,7 @@ var HerbloreRunner = /*#__PURE__*/function () {
           }
         case 'deposit':
           {
-            var _this$batch$tool, _this$batch2, _this$currentPhase2;
-            var heldTool = (_this$batch$tool = (_this$batch2 = this.batch) === null || _this$batch2 === void 0 ? void 0 : _this$batch2.tool) !== null && _this$batch$tool !== void 0 ? _this$batch$tool : (_this$currentPhase2 = this.currentPhase) === null || _this$currentPhase2 === void 0 ? void 0 : _this$currentPhase2.jobs.flatMap(job => {
-              var _job$tools, _job$tools2;
-              return job.tool === undefined ? (_job$tools = job.tools) !== null && _job$tools !== void 0 ? _job$tools : [] : [job.tool].concat(_toConsumableArray((_job$tools2 = job.tools) !== null && _job$tools2 !== void 0 ? _job$tools2 : []));
-            }).find(id => game.inventory(id) > 0);
+            var heldTool = this.heldTool();
             if (heldTool !== undefined && game.inventory(heldTool) > 0) {
               var toDeposit = game.heldItemIds().filter(id => id !== heldTool);
               if (toDeposit.length === 0) {

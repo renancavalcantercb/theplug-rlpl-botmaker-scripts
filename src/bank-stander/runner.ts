@@ -276,6 +276,22 @@ export class HerbloreRunner {
 		this.idleTicks = 0;
 	}
 
+	private heldTool(): number | undefined {
+		// Preserve the exact batch tool when it is still held. If a charged
+		// watering can changed ID, returning the old ID intentionally causes a
+		// full deposit so the next plan resolves the new charge from the bank.
+		if (this.batch?.tool !== undefined) return this.batch.tool;
+		for (const job of this.currentPhase?.jobs ?? []) {
+			if (job.tool !== undefined && this.game.inventory(job.tool) > 0) {
+				return job.tool;
+			}
+			for (const id of job.tools ?? []) {
+				if (this.game.inventory(id) > 0) return id;
+			}
+		}
+		return undefined;
+	}
+
 	tick(): void {
 		const game = this.game;
 		if (this.state === 'stopped' || !game.loggedIn()) return;
@@ -517,15 +533,7 @@ export class HerbloreRunner {
 				break;
 			}
 			case 'deposit': {
-				const heldTool =
-					this.batch?.tool ??
-					this.currentPhase?.jobs
-						.flatMap((job) =>
-							job.tool === undefined
-								? (job.tools ?? [])
-								: [job.tool, ...(job.tools ?? [])],
-						)
-						.find((id) => game.inventory(id) > 0);
+				const heldTool = this.heldTool();
 				if (heldTool !== undefined && game.inventory(heldTool) > 0) {
 					const toDeposit = game
 						.heldItemIds()
